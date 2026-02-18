@@ -1265,12 +1265,12 @@ int P_IsVisible(AActor *lookee, AActor *other, INTBOOL allaround, FLookExParams 
 		fov = DAngle::fromDeg(allaround ? 0. : 180.);
 	}
 
-	double dist = lookee->Distance2D (other);
+	double distSquared = lookee->Distance2DSquared (other);
 
-	if (maxdist && dist > maxdist)
+	if (maxdist && (maxdist < 0.0 || distSquared > maxdist * maxdist))
 		return false;			// [KS] too far
 
-	if (mindist && dist < mindist)
+	if (mindist && (mindist > 0.0 && distSquared < mindist * mindist))
 		return false;			// [KS] too close
 
 	if (fov != nullAngle)
@@ -1281,7 +1281,8 @@ int P_IsVisible(AActor *lookee, AActor *other, INTBOOL allaround, FLookExParams 
 		{
 			// if real close, react anyway
 			// [KS] but respect minimum distance rules
-			if (mindist || dist > lookee->meleerange + lookee->radius)
+			auto d = lookee->meleerange + lookee->radius;
+			if (mindist || (d < 0.0 || distSquared > d * d))
 				return false;	// outside of fov
 		}
 	}
