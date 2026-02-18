@@ -44,8 +44,8 @@ public:
 	void PerformBind(FCommandLine &argv, const char *msg);
 	bool DoKey(event_t *ev);
 	void ArchiveBindings(FConfigFile *F, const char *matchcmd = NULL);
-	int  GetKeysForCommand (const char *cmd, int *first, int *second);
-	TArray<int> GetKeysForCommand (const char *cmd);
+	int  GetKeysForCommand (std::string_view cmd, int *first, int *second);
+	TArray<int> GetKeysForCommand (std::string_view cmd);
 	void UnbindACommand (const char *str);
 	void UnbindAll (const TArray<int> *filter = nullptr);
 	void UnbindKey(const char *key);

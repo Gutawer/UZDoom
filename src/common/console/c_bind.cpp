@@ -39,6 +39,9 @@
 
 #include "d_eventbase.h"
 
+#include "absl/strings/ascii.h"
+#include "absl/strings/match.h"
+
 const char *KeyNames[NUM_KEYS] =
 {
 	// We use the DirectInput codes and assume a qwerty keyboard layout.
@@ -456,7 +459,7 @@ void FKeyBindings::ArchiveBindings(FConfigFile *f, const char *matchcmd)
 //
 //=============================================================================
 
-int FKeyBindings::GetKeysForCommand (const char *cmd, int *first, int *second)
+int FKeyBindings::GetKeysForCommand (std::string_view cmd, int *first, int *second)
 {
 	int c, i;
 
@@ -469,7 +472,9 @@ int FKeyBindings::GetKeysForCommand (const char *cmd, int *first, int *second)
 
 	while (i < NUM_KEYS && c < 2)
 	{
-		if (stricmp (cmd, Binds[i].GetChars()) == 0)
+		auto bind = &Binds[i];
+		auto bindView = std::string_view(bind->GetChars(), bind->Len());
+		if (absl::EqualsIgnoreCase(cmd, bindView))
 		{
 			if (c++ == 0)
 				*first = i;
@@ -498,14 +503,16 @@ const char *FKeyBindings::GetBind (const char *key)
 //
 //=============================================================================
 
-TArray<int> FKeyBindings::GetKeysForCommand (const char *cmd)
+TArray<int> FKeyBindings::GetKeysForCommand (std::string_view cmd)
 {
 	int i = 0;
 	TArray<int> result;
 
 	while (i < NUM_KEYS)
 	{
-		if (stricmp (cmd, Binds[i].GetChars()) == 0)
+		auto bind = &Binds[i];
+		auto bindView = std::string_view(bind->GetChars(), bind->Len());
+		if (absl::EqualsIgnoreCase(cmd, bindView))
 		{
 			result.Push(i);
 		}

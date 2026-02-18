@@ -146,9 +146,27 @@ void ButtonMap::GetAxes ()
 	for (unsigned i = 0; i < Buttons.Size(); i++)
 	{
 		FButtonStatus &btn = Buttons[i];
-		FString &btn_name = NumToName[i];
 
-		btn.AddAxes(btn_name, joyaxes);
+		btn.bIsAxis = false;
+		btn.Axis = 0.0f;
+	}
+	for (int a = 0; a < NUM_AXIS_CODES; a++)
+	{
+		auto axisValue = joyaxes[a];
+		if (axisValue == 0.0) [[likely]] {
+			continue;
+		}
+		auto keyCode = KeyAxisMapping[a];
+		for (unsigned i = 0; i < Buttons.Size(); i++)
+		{
+			FButtonStatus &btn = Buttons[i];
+			FString &btn_name = NumToName[i];
+			btn.AddAxis(
+				std::string_view(btn_name.GetChars(), btn_name.Len()),
+				axisValue,
+				keyCode
+			);
+		}
 	}
 }
 
@@ -254,42 +272,22 @@ bool FButtonStatus::ReleaseKey (int keynum)
 //
 //=============================================================================
 
-void FButtonStatus::AddAxes (FString &btn_name, float joyaxes[NUM_AXIS_CODES])
+void FButtonStatus::AddAxis (std::string_view btnName, float axisValue, int keyCode)
 {
-	int i;
+	auto bind = Bindings.GetBinding(keyCode);
+	if (bind.Len() == 0) return;
+	auto bindView = std::string_view(bind.GetChars(), bind.Len());
 
-	bIsAxis = false;
-	Axis = 0.0f;
-
-	char cmd_name[16];
-	strcpy(&cmd_name[1], btn_name.GetChars());
-
-	cmd_name[0] = '+';
-	TArray<int> positive_keys = Bindings.GetKeysForCommand(cmd_name);
-
-	cmd_name[0] = '-';
-	TArray<int> negative_keys = Bindings.GetKeysForCommand(cmd_name);
-
-	for (i = 0; i < NUM_AXIS_CODES; i++)
+	if (bindView[0] == '+' && bindView.substr(1) == btnName)
 	{
-		float axis_value = joyaxes[i];
+		Axis += axisValue;
+		bIsAxis = true;
+	}
 
-		if (axis_value > 0.0)
-		{
-			int key_code = KeyAxisMapping[i];
-
-			if (positive_keys.Contains(key_code))
-			{
-				Axis += axis_value;
-				bIsAxis = true;
-			}
-
-			if (negative_keys.Contains(key_code))
-			{
-				Axis -= axis_value;
-				bIsAxis = true;
-			}
-		}
+	if (bindView[0] == '-' && bindView.substr(1) == btnName)
+	{
+		Axis -= axisValue;
+		bIsAxis = true;
 	}
 
 	Axis = clamp<float>(Axis, 0.0f, 1.0f);

@@ -47,7 +47,7 @@ struct FButtonStatus
 
 	bool PressKey (int keynum);		// Returns true if this key caused the button to be pressed.
 	bool ReleaseKey (int keynum);	// Returns true if this key is no longer pressed.
-	void AddAxes (FString &btn_name, float joyaxes[NUM_AXIS_CODES]); // Update joystick axis information.
+	void AddAxis (std::string_view btnName, float axisValue, int keyCode); // Update joystick axis information.
 	void ResetTriggers () { bWentDown = bWentUp = false; }
 	void Reset () { bDown = bWentDown = bWentUp = bIsAxis = false; Axis = 0.0f; }
 };
